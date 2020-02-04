@@ -3,6 +3,7 @@ import functools
 from nltk.stem.snowball import SnowballStemmer
 import numpy as np
 import pandas as pd
+import scipy.sparse
 import sklearn.feature_extraction.text
 import sklearn.metrics
 
@@ -10,11 +11,24 @@ stemmer = SnowballStemmer('english')
 
 
 def stemming_preprocessor(data):
-    return ' '.join([stemmer.stem(word) for word in data.split()])
+    return stemmer.stem(data)
 
 
 @functools.lru_cache(maxsize=3)
 def load_dataset(sampling_method, vectorization, preprocessing):
+    filename = f'vectorized/{sampling_method}-{vectorization}-{preprocessing or "none"}'
+    filename_train = f'{filename}-TRAIN.npz'
+    filename_test = f'{filename}-TEST.npz'
+    loaded_from_disk = False
+    
+    try:
+        train_as_vector = scipy.sparse.load_npz(filename_train)
+        test_as_vector = scipy.sparse.load_npz(filename_test)
+        loaded_from_disk = True
+    except:
+        print('have to generate new vectorizations')
+        
+    
     vectorizers = {
         'count': {
             None: sklearn.feature_extraction.text.CountVectorizer(),
@@ -48,8 +62,12 @@ def load_dataset(sampling_method, vectorization, preprocessing):
     # print(train['reviewText'].index)
     # print(train.dtypes)
 
-    train_as_vector = vectorizer.fit_transform(train['reviewText'].values)
-    test_as_vector = vectorizer.transform(test['reviewText'].values)
+    if not loaded_from_disk:
+        train_as_vector = vectorizer.fit_transform(train['reviewText'].values)
+        test_as_vector = vectorizer.transform(test['reviewText'].values)
+        print('saving matrices to disk')
+        scipy.sparse.save_npz(filename_train, train_as_vector)
+        scipy.sparse.save_npz(filename_test, test_as_vector)
     
     return train_as_vector, train['overall'].values, test_as_vector, test['overall'].values
 
