@@ -105,5 +105,6 @@ def perf_row(
         'representation': representation,
         'preprocessing': preprocessing,
         **classifier_specific,
+        'real_world_acc': classifier.score(test_as_vec, test_targets),
         'score': get_score(classifier, test_as_vec, test_targets),
     }
