@@ -49,8 +49,9 @@ def load_dataset(sampling_method, vectorization, preprocessing):
     vectorizer = vectorizers[vectorization][preprocessing]
     
     filenames = {
-        'random_downsampling': ('downsampled_train.csv', 'full_test.csv'),
-        'full': ('full_train.csv', 'full_test.csv'),
+        'random_downsampling': ('downsampled_train.csv', 'test.csv'),
+        'full': ('full_train.csv', 'test.csv'),
+        'oversampled': ('oversampled_train.csv', 'test.csv'),
     }
     
     train_name, test_name = filenames[sampling_method]
