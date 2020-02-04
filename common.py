@@ -1,17 +1,25 @@
 import functools
 
+from nltk.stem.snowball import SnowballStemmer
 import numpy as np
 import pandas as pd
 import sklearn.feature_extraction.text
 import sklearn.metrics
 
+stemmer = SnowballStemmer('english')
 
-@functools.lru_cache
+
+def stemming_preprocessor(data):
+    return ' '.join([stemmer.stem(word) for word in data.split()])
+
+
+@functools.lru_cache(maxsize=3)
 def load_dataset(sampling_method, vectorization, preprocessing):
     vectorizers = {
         'count': {
             None: sklearn.feature_extraction.text.CountVectorizer(),
-            'stop_words': sklearn.feature_extraction.text.CountVectorizer(stop_words='english')
+            'stop_words': sklearn.feature_extraction.text.CountVectorizer(stop_words='english'),
+            'stem': sklearn.feature_extraction.text.CountVectorizer(preprocessor=stemming_preprocessor)
         },
         'binary': {
             None: sklearn.feature_extraction.text.CountVectorizer(binary=True),
@@ -20,6 +28,7 @@ def load_dataset(sampling_method, vectorization, preprocessing):
         'tf_idf': {
             None: sklearn.feature_extraction.text.TfidfVectorizer(),
             'stop_words': sklearn.feature_extraction.text.TfidfVectorizer(stop_words='english'),
+            'stem': sklearn.feature_extraction.text.TfidfVectorizer(preprocessor=stemming_preprocessor)
         }
     }
     
@@ -66,3 +75,16 @@ def display_score(classifier, test, test_targets):
 def display_classifier_performance(classifier, test, test_targets):
     display_score(classifier, test, test_targets)
     display_confusion_matrices(classifier, test, test_targets)
+
+
+def perf_row(
+    classifier, test_as_vec, test_targets, classifier_type, sampling,
+    representation, preprocessing, **classifier_specific):
+    return {
+        'classifier_type': classifier_type,
+        'sampling': sampling,
+        'representation': representation,
+        'preprocessing': preprocessing,
+        **classifier_specific,
+        'score': get_score(classifier, test_as_vec, test_targets),
+    }
