@@ -84,7 +84,7 @@ def display_confusion_matrices(classifier, test, test_targets):
     print(sklearn.metrics.confusion_matrix(
         test_targets, classifier.predict(test), normalize='true'))
     sklearn.metrics.plot_confusion_matrix(
-        classifier, test, test_targets, normalize='true', cmap='Greens')
+        classifier, test, test_targets, normalize='true', cmap='Purples')
     
 
 def display_score(classifier, test, test_targets):
