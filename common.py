@@ -84,7 +84,7 @@ def display_confusion_matrices(classifier, test, test_targets):
     print(sklearn.metrics.confusion_matrix(
         test_targets, classifier.predict(test), normalize='true'))
     sklearn.metrics.plot_confusion_matrix(
-        classifier, test, test_targets, normalize='true', cmap='Purples')
+        classifier, test, test_targets, normalize='true', cmap='Greys')
     
 
 def display_score(classifier, test, test_targets):
@@ -95,6 +95,21 @@ def display_classifier_performance(classifier, test, test_targets):
     display_score(classifier, test, test_targets)
     display_confusion_matrices(classifier, test, test_targets)
 
+
+def order_aware_error(estimator, test_X, test_Y):
+    #predictions = estimator.predict(test_X)
+    #error_count = sum(predictions != test_Y)
+    #return sum(abs(predictions - test_Y)) / error_count
+    klasses = {}
+    for klass in range(1, 5+1):
+        klass_indices = (test_Y == klass)
+        klass_predictions = estimator.predict(test_X[klass_indices])
+        klass_error_count = sum(klass_predictions != test_Y[klass_indices])
+        klasses[f'order_aware_error_{klass}'] = \
+            sum(abs(klass_predictions - test_Y[klass_indices])) / klass_error_count
+    klasses['order_aware_error_avg'] = sum(klasses.values()) / 5
+    return klasses
+        
 
 def perf_row(
     classifier, test_as_vec, test_targets, classifier_type, sampling,
@@ -107,4 +122,5 @@ def perf_row(
         **classifier_specific,
         'real_world_acc': classifier.score(test_as_vec, test_targets),
         'score': get_score(classifier, test_as_vec, test_targets),
+        **order_aware_error(classifier, test_as_vec, test_targets),
     }
